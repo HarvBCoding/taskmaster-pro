@@ -190,22 +190,33 @@ $(".card .list-group").sortable({
   // multiple types supported: string-if set to clone the element will be cloned and the clone will be dragged
   // or function-that will return a DOMElement to use while dragging; the function receives the event and the element being sorted
   helper: "clone",
+
   // the activate event is triggered when using connected lists, every connected list on drag start receives it
   activate: function(event) {
-    // console.log("activate", this);
+    // adds dropover class to list element that is sortable
+    $(this).addClass("dropover");
+    $(".bottom-trash").addClass("bottom-trash-drag");
   },
+
   // the deactivate event is triggers when sorting has stopped, is propogated to all possible connected lists
   deactivate: function(event) {
-    // console.log("deactivate", this);
+    // removes class of dropover from list element after the sorting has stopped
+    $(this).removeClass("dropover");
+    $(".bottom-trash").removeClass("bottom-trash-drag");
   },
+
   // the over event is triggered when a sortable item is moved into a sortable list
   over: function(event) {
-    // console.log("over", event.target);
+    // adds the class of dropover-active the list
+    $(event.target).addClass("dropover-active");
   },
+
   // the out event is triggered when a sortable item is moved away from a sortable list
   out: function(event) {
-    // console.log("out", event.target);
+    // removes class of dropover-active once the sortable item is moved away from the list
+    $(event.target).removeClass("dropover-active");
   },
+
   // the update event is triggered when the user stopped sorting and the DOM position has changed
   update: function(event) {
     
@@ -255,17 +266,17 @@ $("#trash").droppable({
   drop: function(event, ui) {
     // remove method works like JS and will remove the element from the DOM entirely
     ui.draggable.remove();
-    // console.log("drop");
+    $("bottom-trash").removeClass("bottom-trash-active");
   },
 
   // triggered when an accepted draggable is dragged over the droppable
   over: function(event, ui) {
-    // console.log("over");
+    $("bottom-trash").addClass("bottom-trash-active");
   },
 
   // triggered when an accepted draggable is dragged out of the droppable
   out: function(event, ui) {
-    // console.log("out");
+    $("bottom-trash").removeClass("bottom-trash-active");
   }
 });
 
@@ -319,7 +330,7 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -352,4 +363,15 @@ $("#remove-tasks").on("click", function() {
 // load tasks for the first time
 loadTasks();
 
+setTimeout(function() {
+  // the jQuery selector passes each element it finds using the selector into the callback function and that element is expressed in the el argument of the function
+  // auditTask() then passes the element to its routines using the el argument
+  // loop over every task with a class of list-group-item 
+  $(".card .list-group-item").each(function(index, el) {
+    // and execute auditTask() to check the due date of each
+    auditTask(el);
+  });
+  // run the code block every 30 minutes; you can also use math functions to convert time into milliseconds
+  // [example: (1000 * 60) * 30);]
+}, 1800000);
 
