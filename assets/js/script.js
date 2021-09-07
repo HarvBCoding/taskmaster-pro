@@ -13,6 +13,8 @@ var createTask = function(taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  // check due date; executing auditTask() before adding the task item to the page
+  auditTask(taskLi);
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -121,12 +123,22 @@ $(".list-group").on("click", "span", function() {
   // swap out elements
   $(this).replaceWith(dateInput);
 
-  // automatically focus on new element
+  // enable jquery ui datepicker
+  dateInput.datepicker({
+    minDate: 1,
+    // by adding the onClose method we instruct the dataInput element to trigger on its own change event and execute the code block
+    onClose: function() {
+      // when calendar is closed, force a "change" event on the 'dateInput'
+      $(this).trigger("change");
+    }
+  });
+
+  // automatically brings up the calendar
   dateInput.trigger("focus");
 });
 
 // value of due date was changed
-$(".list-group").on("blur", "input[type='text']", function() {
+$(".list-group").on("change", "input[type='text']", function() {
 
   // get current text
   var date = $(this)
@@ -154,8 +166,11 @@ $(".list-group").on("blur", "input[type='text']", function() {
     .addClass("badge badge-primary badge-pill")
     .text(date);
 
-  // replace input with span element
-  $(this).replaceWith(taskSpan);
+    // replace input with span element
+    $(this).replaceWith(taskSpan);
+
+    // pass task's <li> element into auditTask() to check new due date
+    auditTask($(taskSpan).closest(".list-group-item"));
 });
 
 // the jQuery UI method .sortable() turned every element w/ the class list-group into sortable list
@@ -254,8 +269,42 @@ $("#trash").droppable({
   }
 });
 
+var auditTask = function(taskEl) {
+  // get date from task element
+  var date = $(taskEl)
+    .find("span")
+    .text()
+    .trim();
+    
+    // first we use the date variable we created from taskEl to make a new moment object, configured for the user's local time using moment(date, "L")
+    // b/c the date variable does not specify a time of day and the default is 12am, we convert it to 5pm using the .set("hour", 17) method (the value is in 24hr time)
+    // convert to moment object at 5:00pm
+    var time = moment(date, "L").set("hour", 17);
 
+    // remove any old classes from element
+    // the removeClass() method will remove any of these classes if they were already in place
+    $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
 
+    // apply new class if task is near/over due date
+    // .isAfter() gets the current time from moment and checks if that value comes later that the value of the time variable
+    if (moment().isAfter(time)) {
+      // now we're checking if the current date and time are later than the date and time pulled from taskEl
+      // if the date and time are in the past the element will have a red background
+      $(taskEl).addClass("list-group-item-danger");
+      // moment() functions program from left to right; to get the duration of a difference between 2 moments, pass diff as an argument into moment#duration
+    } else if (Math.abs(moment().diff(time, "days")) <= 2) {
+      // the upcoming task background will turn yellow 2 days before the due date
+      $(taskEl).addClass("list-group-item-warning");
+    }
+};
+
+$("#modalDueDate").datepicker({
+    // minDate is an option to set the minimum selectable date; when null here is no minimum
+    // multiple types supported: a date(the date of the minimum selectable date), a number(the number of days from today(2 is 2 days from now and -1 is yesterday))
+    //  and a string(in the format defined by the dateFormat option, or a relative date(relatove dates must contain value and period pairs; valid periods are "y" for years, "m" for months, "d" for days))
+    // (example "+1m +7d" is 1 month and 7days from today)
+    minDate: 1
+});
 
 // modal was triggered
 $("#task-form-modal").on("show.bs.modal", function() {
