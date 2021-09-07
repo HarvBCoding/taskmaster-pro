@@ -158,6 +158,102 @@ $(".list-group").on("blur", "input[type='text']", function() {
   $(this).replaceWith(taskSpan);
 });
 
+// the jQuery UI method .sortable() turned every element w/ the class list-group into sortable list
+$(".card .list-group").sortable({
+
+  // the connectwith property then linked the sortable lists with any other lists with the same class
+  connectWith: $(".card .list-group"),
+
+  // the scroll option, if set to true, the page scrolls when coming to an edge
+  scroll: false,
+
+  // the tolerance option specifies which mode to use for testing whether the item being moved is hovering over another item
+  // possible values: intersect-the item overlaps the other item by at least 50% or pointer-the mouse pointer overlaps the other item
+  tolerance: "pointer",
+
+  // the helper option allows for a helper element to be used for draggind display
+  // multiple types supported: string-if set to clone the element will be cloned and the clone will be dragged
+  // or function-that will return a DOMElement to use while dragging; the function receives the event and the element being sorted
+  helper: "clone",
+  // the activate event is triggered when using connected lists, every connected list on drag start receives it
+  activate: function(event) {
+    // console.log("activate", this);
+  },
+  // the deactivate event is triggers when sorting has stopped, is propogated to all possible connected lists
+  deactivate: function(event) {
+    // console.log("deactivate", this);
+  },
+  // the over event is triggered when a sortable item is moved into a sortable list
+  over: function(event) {
+    // console.log("over", event.target);
+  },
+  // the out event is triggered when a sortable item is moved away from a sortable list
+  out: function(event) {
+    // console.log("out", event.target);
+  },
+  // the update event is triggered when the user stopped sorting and the DOM position has changed
+  update: function(event) {
+    
+    // array to store the task data in
+    var tempArr = [];
+
+    // loop over current set of children in sortable list to retrieve the text and date from tasks
+    $(this).children().each(function() {
+      var text = $(this)
+        .find("p")
+        .text()
+        .trim();
+
+      var date = $(this)
+        .find("span")
+        .text()
+        .trim();
+
+      // add task data to the temp array as an object
+      tempArr.push({
+        text: text,
+        date: date
+      });
+    });
+    // trim down list's id to match object property
+    var arrName = $(this)
+      .attr("id")
+      .replace("list-", "");
+
+    // update array on tasjs object and save
+    tasks[arrName] = tempArr;
+    saveTasks();
+  }
+});
+
+$("#trash").droppable({
+
+  // the accept option controls which elements are accepted by the droppable
+  accept: ".card .list-group-item",
+
+  // tolerance option specifies which mode to use for testing whether a draggable is hovering over a droppable
+  // 4 possible values: fit(draggable overlaps droppable completely), intersect(draggable overlaps the droppable at least 50% in both directions)
+  // pointer(mouse pointer overlaps droppable) or touch(draggable overlaps the droppable any amount)
+  tolerance: "touch",
+  
+  // drop event is triggered when an accepted draggable is dropped on the droppable
+  drop: function(event, ui) {
+    // remove method works like JS and will remove the element from the DOM entirely
+    ui.draggable.remove();
+    // console.log("drop");
+  },
+
+  // triggered when an accepted draggable is dragged over the droppable
+  over: function(event, ui) {
+    // console.log("over");
+  },
+
+  // triggered when an accepted draggable is dragged out of the droppable
+  out: function(event, ui) {
+    // console.log("out");
+  }
+});
+
 
 
 
