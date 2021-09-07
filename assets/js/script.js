@@ -33,7 +33,6 @@ var loadTasks = function() {
 
   // loop over object properties
   $.each(tasks, function(list, arr) {
-    console.log(list, arr);
     // then loop over sub-array
     arr.forEach(function(task) {
       createTask(task.text, task.date, list);
@@ -44,6 +43,120 @@ var loadTasks = function() {
 var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
+
+// $(".list-group") tells jQuery to find all existing .list-group elements and on the click of the child element fo the function
+// the event listeners on all p elements are delegated to the parent(.list-group); which is why there is an extra argument in the on method
+$(".list-group").on("click", "p", function() {
+
+  // 'this' is js native and will print the current element; w/ the $ character 'this' can be converted to a jQuery object 
+  // the text() method will get the inner content of the currrent element
+  // many jQuery methods can be chained together
+  var text = $(this)
+    .text()
+    .trim();
+
+  // jQuery can also create dynamic elements; $("<textarea>") creates a new element
+  var textInput = $("<textarea>")
+    .addClass("form-control")
+    .val(text);
+
+    // to swap out the existing <p> element with the <textarea> element
+  $(this).replaceWith(textInput);
+
+  // to highlight the input box for the user; a highlighted element is considered in focus, an event that can be trigger programatically
+  textInput.trigger("focus");
+});
+
+// the blur event will trigger as soon as the user interacts with anything other than the <textarea> element
+$(".list-group").on("blur", "textarea", function() {
+
+  // get the textarea's current value/text
+  var text = $(this)
+    .val()
+    .trim();
+
+  // get the parent ul's id attribute
+  var status = $(this)
+    .closest(".list-group")
+    .attr("id")
+    // .replace() is a js operator to find and replace text in a string; 
+    // jQuery and js operators can be chained together; .replace() is being chained to attr to remove "list-" from the text
+    .replace("list-", "");
+
+  // get the task's position in the list of other li elements
+  var index = $(this) 
+  .closest(".list-group-item")
+  // index points out that child elements are zero indexed
+  .index();
+
+  // tasks is an object, tasks[status] returns an array, tasks[status][index] returns the object at the given index in the array
+  // the following returns the text property of the object at the given index
+  tasks[status][index].text = text;
+  // updating the task was necessary for localStorage so save tasks
+  saveTasks();
+
+  // convert the <textarea> back into a <p> element
+  // recreate p element
+  var taskP = $("<p>")
+    .addClass("m-1")
+    .text(text);
+  // replace textarea with p element
+  $(this).replaceWith(taskP);
+});
+
+// due date was clicked
+$(".list-group").on("click", "span", function() {
+  // get current text
+  var date = $(this)
+    .text()
+    .trim();
+
+  // create new input element
+  var dateInput = $("<input>")
+    // with one argument .attr gets an attribute; with 2 arguments it sets an attribute
+    .attr("type", "text")
+    .addClass("form-control")
+    .val(date);
+
+  // swap out elements
+  $(this).replaceWith(dateInput);
+
+  // automatically focus on new element
+  dateInput.trigger("focus");
+});
+
+// value of due date was changed
+$(".list-group").on("blur", "input[type='text']", function() {
+
+  // get current text
+  var date = $(this)
+    .val()
+    .trim();
+
+  // get the parent ul's id attribute
+  var status = $(this)
+    .closest(".list-group")
+    .attr("id")
+    .replace("list-", "");
+
+  // get the task's position in the list of other li elements
+  var index = $(this)
+    .closest(".list-group-item")
+    .index();
+
+  // update task in array and resave to localStorage
+  tasks[status][index].date = date;
+  saveTasks();
+
+  // recreate span element with bootstrap classes
+  var taskSpan = $("<span>")
+    // .addClass can add one or multiple class names at a time
+    .addClass("badge badge-primary badge-pill")
+    .text(date);
+
+  // replace input with span element
+  $(this).replaceWith(taskSpan);
+});
 
 
 
